@@ -1,6 +1,6 @@
 from fastapi import FastAPI, status
 
-from car_api.routers import brands, users
+from car_api.routers import brands, cars, users
 
 app = FastAPI(
     title='Car API',
@@ -18,6 +18,12 @@ app.include_router(
     router=brands.router,
     prefix='/api/v1/brands',
     tags=['Brands'],
+)
+
+app.include_router(
+    router=cars.router,
+    prefix='/api/v1/cars',
+    tags=['Cars'],
 )
 
 
