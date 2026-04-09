@@ -57,8 +57,12 @@ async def create_brand(
 async def list_brands(
     offset: int = Query(0, ge=0, description='Número de registros para pular'),
     limit: int = Query(100, ge=1, le=100, description='Limite de registros'),
-    search: Optional[str] = Query(None, description='Buscar por nome da marca'),
-    is_active: Optional[bool] = Query(None, description='Filtrar por marcas ativas'),
+    search: Optional[str] = Query(
+        None, description='Buscar por nome da marca'
+    ),
+    is_active: Optional[bool] = Query(
+        None, description='Filtrar por marcas ativas'
+    ),
     db: AsyncSession = Depends(get_session),
 ):
     query = select(Brand)
@@ -75,11 +79,7 @@ async def list_brands(
     result = await db.execute(query)
     brands = result.scalars().all()
 
-    return {
-        'brands': brands,
-        'offset': offset,
-        'limit': limit
-    }
+    return {'brands': brands, 'offset': offset, 'limit': limit}
 
 
 @router.get(
@@ -107,7 +107,7 @@ async def get_brand(
     path='/{brand_id}',
     status_code=status.HTTP_200_OK,
     response_model=BrandPublicSchema,
-    summary='Atualizar marca'
+    summary='Atualizar marca',
 )
 async def update_brand(
     brand_id: int,
@@ -119,17 +119,19 @@ async def update_brand(
     if not brand:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Marca não encontrada'
+            detail='Marca não encontrada',
         )
 
     update_data = brand_update.model_dump(exclude_unset=True)
 
     if 'name' in update_data and update_data['name'] != brand.name:
         name_exists = await db.scalar(
-            select(exists().where(
-                (Brand.name == update_data['name']) &
-                (Brand.id != brand_id)
-            ))
+            select(
+                exists().where(
+                    (Brand.name == update_data['name'])
+                    & (Brand.id != brand_id)
+                )
+            )
         )
         if name_exists:
             raise HTTPException(

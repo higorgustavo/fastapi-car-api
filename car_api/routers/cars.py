@@ -67,7 +67,7 @@ async def create_car(
         description=car.description,
         is_available=car.is_available,
         brand_id=car.brand_id,
-        owner_id=car.owner_id
+        owner_id=car.owner_id,
     )
 
     db.add(db_car)
@@ -93,24 +93,36 @@ async def create_car(
 async def list_cars(
     offset: int = Query(0, ge=0, description='Número de registros para pular'),
     limit: int = Query(100, ge=1, le=100, description='Limite de registros'),
-    search: Optional[str] = Query(None, description='Buscar por modelo, cor ou placa'),
+    search: Optional[str] = Query(
+        None, description='Buscar por modelo, cor ou placa'
+    ),
     brand_id: Optional[int] = Query(None, description='Filtrar por marca'),
-    owner_id: Optional[int] = Query(None, description='Filtrar por proprietário'),
-    fuel_type: Optional[FuelType] = Query(None, description='Filtrar por tipo de combustível'),
-    transmission: Optional[TransmissionType] = Query(None, description='Filtrar por transmissão'),
-    is_available: Optional[bool] = Query(None, description='Filtrar por disponibilidade'),
+    owner_id: Optional[int] = Query(
+        None, description='Filtrar por proprietário'
+    ),
+    fuel_type: Optional[FuelType] = Query(
+        None, description='Filtrar por tipo de combustível'
+    ),
+    transmission: Optional[TransmissionType] = Query(
+        None, description='Filtrar por transmissão'
+    ),
+    is_available: Optional[bool] = Query(
+        None, description='Filtrar por disponibilidade'
+    ),
     min_price: Optional[float] = Query(None, ge=0, description='Preço mínimo'),
     max_price: Optional[float] = Query(None, ge=0, description='Preço máximo'),
     db: AsyncSession = Depends(get_session),
 ):
-    query = select(Car).options(selectinload(Car.brand), selectinload(Car.owner))
+    query = select(Car).options(
+        selectinload(Car.brand), selectinload(Car.owner)
+    )
 
     if search:
         search_filter = f'%{search}%'
         query = query.where(
-            (Car.model.ilike(search_filter)) |
-            (Car.color.ilike(search_filter)) |
-            (Car.plate.ilike(search_filter))
+            (Car.model.ilike(search_filter))
+            | (Car.color.ilike(search_filter))
+            | (Car.plate.ilike(search_filter))
         )
 
     if brand_id is not None:
@@ -142,7 +154,7 @@ async def list_cars(
     return {
         'cars': cars,
         'offset': offset,
-        'limit': limit
+        'limit': limit,
     }
 
 
@@ -176,7 +188,7 @@ async def get_car(
     path='/{car_id}',
     status_code=status.HTTP_200_OK,
     response_model=CarPublicSchema,
-    summary='Atualizar carro'
+    summary='Atualizar carro',
 )
 async def update_car(
     car_id: int,
@@ -188,17 +200,18 @@ async def update_car(
     if not car:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Carro não encontrado'
+            detail='Carro não encontrado',
         )
 
     update_data = car_update.model_dump(exclude_unset=True)
 
     if 'plate' in update_data and update_data['plate'] != car.plate:
         plate_exists = await db.scalar(
-            select(exists().where(
-                (Car.plate == update_data['plate']) &
-                (Car.id != car_id)
-            ))
+            select(
+                exists().where(
+                    (Car.plate == update_data['plate']) & (Car.id != car_id)
+                )
+            )
         )
         if plate_exists:
             raise HTTPException(
