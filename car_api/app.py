@@ -1,11 +1,17 @@
 from fastapi import FastAPI, status
 
-from car_api.routers import brands, cars, users
+from car_api.routers import auth, brands, cars, users
 
 app = FastAPI(
     title='Car API',
     description='API moderna de carros',
     version='0.1.0',
+)
+
+app.include_router(
+    router=auth.router,
+    prefix='/api/v1/auth',
+    tags=['Authentication'],
 )
 
 app.include_router(
