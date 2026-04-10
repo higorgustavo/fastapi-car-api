@@ -5,7 +5,7 @@ from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from car_api.core.database import get_session
-from car_api.core.security import get_password_hash
+from car_api.core.security import get_current_user, get_password_hash
 from car_api.models.users import User
 from car_api.schemas.users import (
     UserListPublicSchema,
@@ -115,6 +115,7 @@ async def get_user(user_id: int, db: AsyncSession = Depends(get_session)):
 async def update_user(
     user_id: int,
     user_update: UserUpdateSchema,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ):
     user = await db.get(User, user_id)
@@ -173,7 +174,11 @@ async def update_user(
     status_code=status.HTTP_204_NO_CONTENT,
     summary='Deletar usuário',
 )
-async def delete_user(user_id: int, db: AsyncSession = Depends(get_session)):
+async def delete_user(
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
+):
     user = await db.get(User, user_id)
 
     if not user:

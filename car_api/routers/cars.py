@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from car_api.core.database import get_session
+from car_api.core.security import get_current_user, verify_car_ownership
 from car_api.models.cars import Brand, Car, FuelType, TransmissionType
 from car_api.models.users import User
 from car_api.schemas.cars import (
@@ -26,6 +27,7 @@ router = APIRouter()
 )
 async def create_car(
     car: CarSchema,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ):
     plate_exists = await db.scalar(
@@ -111,11 +113,15 @@ async def list_cars(
     ),
     min_price: Optional[float] = Query(None, ge=0, description='Preço mínimo'),
     max_price: Optional[float] = Query(None, ge=0, description='Preço máximo'),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ):
     query = select(Car).options(
         selectinload(Car.brand), selectinload(Car.owner)
     )
+
+    # Listar apenas os carros do usuário logado
+    # query = query.where(Car.owner_id == current_user.id)
 
     if search:
         search_filter = f'%{search}%'
@@ -166,6 +172,7 @@ async def list_cars(
 )
 async def get_car(
     car_id: int,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ):
     result = await db.execute(
@@ -181,6 +188,8 @@ async def get_car(
             detail='Carro não encontrado',
         )
 
+    verify_car_ownership(current_user, car.owner_id)
+
     return car
 
 
@@ -193,6 +202,7 @@ async def get_car(
 async def update_car(
     car_id: int,
     car_update: CarUpdateSchema,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ):
     car = await db.get(Car, car_id)
@@ -202,6 +212,8 @@ async def update_car(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Carro não encontrado',
         )
+
+    verify_car_ownership(current_user, car.owner_id)
 
     update_data = car_update.model_dump(exclude_unset=True)
 
@@ -262,6 +274,7 @@ async def update_car(
 )
 async def delete_car(
     car_id: int,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ):
     car = await db.get(Car, car_id)
@@ -271,6 +284,7 @@ async def delete_car(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Carro não encontrado',
         )
+    verify_car_ownership(current_user, car.owner_id)
 
     await db.delete(car)
     await db.commit()
