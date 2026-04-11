@@ -50,13 +50,13 @@ def verify_token(token: str) -> Dict:
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Token has expired',
+            detail='O token expirou',
             headers={'WWW-Authenticate': 'Bearer'},
         )
     except jwt.InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Could not validate credentials',
+            detail='Não foi possível validar as credenciais',
             headers={'WWW-Authenticate': 'Bearer'},
         )
 
@@ -86,7 +86,7 @@ async def get_current_user(
     if not user_id_str:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Could not validate credentials',
+            detail='Não foi possível validar as credenciais',
             headers={'WWW-Authenticate': 'Bearer'},
         )
 
@@ -95,7 +95,7 @@ async def get_current_user(
     except (ValueError, TypeError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Could not validate credentials',
+            detail='Não foi possível validar as credenciais',
             headers={'WWW-Authenticate': 'Bearer'},
         )
 
@@ -105,7 +105,7 @@ async def get_current_user(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Could not validate credentials',
+            detail='Não foi possível validar as credenciais',
             headers={'WWW-Authenticate': 'Bearer'},
         )
 
@@ -116,5 +116,5 @@ def verify_car_ownership(user: User, car_owner_id: int) -> None:
     if user.id != car_owner_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='Not enough permissions to access this car',
+            detail='Permissões insuficientes para acessar este carro',
         )

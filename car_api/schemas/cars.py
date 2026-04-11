@@ -21,7 +21,7 @@ class CarSchema(BaseModel):
     description: Optional[str] = None
     is_available: bool = True
     brand_id: int
-    owner_id: int
+    # owner_id: int
 
     @field_validator('model')
     def model_min_length(cls, v):
@@ -67,7 +67,7 @@ class CarUpdateSchema(BaseModel):
     description: Optional[str] = None
     is_available: Optional[bool] = None
     brand_id: Optional[int] = None
-    owner_id: Optional[int] = None
+    # owner_id: Optional[int] = None
 
     @field_validator('model')
     def model_min_length(cls, v):
@@ -129,3 +129,13 @@ class CarListPublicSchema(BaseModel):
     cars: List[CarPublicSchema]
     offset: int
     limit: int
+
+
+class CarTransferSchema(BaseModel):
+    new_owner_id: int
+
+    @field_validator('new_owner_id')
+    def validate_new_owner_id(cls, v):
+        if v <= 0:
+            raise ValueError('new_owner_id deve ser maior que zero')
+        return v

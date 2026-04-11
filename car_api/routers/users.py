@@ -113,12 +113,11 @@ async def get_user(user_id: int, db: AsyncSession = Depends(get_session)):
     summary='Atualizar usuário',
 )
 async def update_user(
-    user_id: int,
     user_update: UserUpdateSchema,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ):
-    user = await db.get(User, user_id)
+    user = await db.get(User, current_user.id)
 
     if not user:
         raise HTTPException(
@@ -133,7 +132,7 @@ async def update_user(
             select(
                 exists().where(
                     (User.username == update_data['username'])
-                    & (User.id != user_id)
+                    & (User.id != current_user.id)
                 )
             )
         )
@@ -147,7 +146,8 @@ async def update_user(
         email_exists = await db.scalar(
             select(
                 exists().where(
-                    (User.email == update_data['email']) & (User.id != user_id)
+                    (User.email == update_data['email'])
+                    & (User.id != current_user.id)
                 )
             )
         )

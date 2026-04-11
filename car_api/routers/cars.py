@@ -13,6 +13,7 @@ from car_api.schemas.cars import (
     CarListPublicSchema,
     CarPublicSchema,
     CarSchema,
+    CarTransferSchema,
     CarUpdateSchema,
 )
 
@@ -48,14 +49,14 @@ async def create_car(
             detail='Marca não encontrada',
         )
 
-    owner_exists = await db.scalar(
-        select(exists().where(User.id == car.owner_id))
-    )
-    if not owner_exists:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Proprietário não encontrado',
-        )
+    # owner_exists = await db.scalar(
+    #     select(exists().where(User.id == car.owner_id))
+    # )
+    # if not owner_exists:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_400_BAD_REQUEST,
+    #         detail='Proprietário não encontrado',
+    #     )
 
     db_car = Car(
         model=car.model,
@@ -69,8 +70,13 @@ async def create_car(
         description=car.description,
         is_available=car.is_available,
         brand_id=car.brand_id,
-        owner_id=car.owner_id,
+        owner_id=current_user.id,
     )
+
+    # car_data = car.model_dump()
+    # car_data['owner_id'] = current_user.id
+
+    # db_car = Car(**car_data)
 
     db.add(db_car)
     await db.commit()
@@ -188,7 +194,7 @@ async def get_car(
             detail='Carro não encontrado',
         )
 
-    verify_car_ownership(current_user, car.owner_id)
+    # verify_car_ownership(current_user, car.owner_id)
 
     return car
 
@@ -216,6 +222,7 @@ async def update_car(
     verify_car_ownership(current_user, car.owner_id)
 
     update_data = car_update.model_dump(exclude_unset=True)
+    update_data['owner_id'] = current_user.id
 
     if 'plate' in update_data and update_data['plate'] != car.plate:
         plate_exists = await db.scalar(
@@ -241,15 +248,15 @@ async def update_car(
                 detail='Marca não encontrada',
             )
 
-    if 'owner_id' in update_data:
-        owner_exists = await db.scalar(
-            select(exists().where(User.id == update_data['owner_id']))
-        )
-        if not owner_exists:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Proprietário não encontrado',
-            )
+    # if 'owner_id' in update_data:
+    #     owner_exists = await db.scalar(
+    #         select(exists().where(User.id == update_data['owner_id']))
+    #     )
+    #     if not owner_exists:
+    #         raise HTTPException(
+    #             status_code=status.HTTP_400_BAD_REQUEST,
+    #             detail='Proprietário não encontrado',
+    #         )
 
     for field, value in update_data.items():
         setattr(car, field, value)
@@ -288,3 +295,48 @@ async def delete_car(
 
     await db.delete(car)
     await db.commit()
+
+
+@router.post(
+    path='/{car_id}/transfer',
+    status_code=status.HTTP_200_OK,
+    response_model=CarPublicSchema,
+    summary='Transferir carro para outro usuário',
+)
+async def transfer_car(
+    car_id: int,
+    transfer_data: CarTransferSchema,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
+):
+    car = await db.get(Car, car_id)
+
+    if not car:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Carro não encontrado',
+        )
+
+    verify_car_ownership(current_user, car.owner_id)
+
+    new_owner = await db.get(User, transfer_data.new_owner_id)
+
+    if not new_owner:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Novo proprietário não encontrado',
+        )
+
+    car.owner_id = new_owner.id
+
+    await db.commit()
+    await db.refresh(car)
+
+    result = await db.execute(
+        select(Car)
+        .options(selectinload(Car.brand), selectinload(Car.owner))
+        .where(Car.id == car.id)
+    )
+    car_with_relations = result.scalar_one()
+
+    return car_with_relations
