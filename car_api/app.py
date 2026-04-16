@@ -4,7 +4,7 @@ from car_api.routers import auth, brands, cars, users
 
 app = FastAPI(
     title='Car API',
-    description='API moderna de carros',
+    description='API de carros',
     version='0.1.0',
 )
 
