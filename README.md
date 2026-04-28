@@ -1,98 +1,244 @@
-# Car API 🚗
+# Car API
 
-Uma API moderna e robusta para gerenciamento de veículos, marcas e usuários, desenvolvida com **FastAPI** e conectada a um banco de dados **PostgreSQL**.
+Uma API REST para gerenciamento de carros e usu�rios, construída com FastAPI, SQLAlchemy e SQLite.
 
-## 🚀 Sobre o Projeto
+## Pré-requisitos
 
-A **Car API** foi projetada para oferecer uma solução completa de catálogo de veículos, permitindo o cadastro de usuários, autenticação via JWT, gerenciamento de marcas e o controle total sobre a frota de carros (incluindo transferência de propriedade).
+- Python 3.13 ou superior
+- pipx (para instalar Poetry)
+- Poetry (para gerenciamento de dependências)
 
-### Principais Tecnologias
-- **FastAPI**: Framework web de alta performance.
-- **PostgreSQL**: Banco de dados relacional robusto.
-- **SQLAlchemy (Async)**: ORM para mapeamento objeto-relacional com suporte assíncrono.
-- **Alembic**: Gerenciamento de migrações de banco de dados.
-- **Pydantic**: Validação de dados e definições de esquemas.
-- **JWT (JSON Web Tokens)**: Autenticação segura.
-- **Poetry**: Gerenciamento de dependências e pacotes.
+## Configuração do Ambiente
 
----
+### 1. Instalação do pipx
 
-## 🛣️ Rotas da API
+O pipx é usado para instalar ferramentas Python em ambientes isolados.
+[Documentação do pipx](https://pipx.pypa.io/stable/installation/)
 
-A API está organizada em módulos. A base de todas as rotas (exceto health check) é `/api/v1`.
+#### No Linux:
+```bash
+sudo apt update
+sudo apt install pipx
+pipx ensurepath
+```
 
-### 🔐 Autenticação (`/auth`)
-| Método | Rota | Nome/Descrição |
-| :--- | :--- | :--- |
-| `POST` | `/token` | **Gerar token de acesso**: Realiza o login e retorna o JWT. |
-| `POST` | `/refresh_token` | **Atualizar token**: Gera um novo token a partir de um válido. |
+#### No macOS:
+```bash
+brew install pipx
+pipx ensurepath
+```
 
-### 👤 Usuários (`/users`)
-| Método | Rota | Nome/Descrição |
-| :--- | :--- | :--- |
-| `POST` | `/` | **Criar novo usuário**: Registra um novo usuário no sistema. |
-| `GET` | `/` | **Listar usuários**: Retorna a lista de usuários cadastrados. |
-| `GET` | `/{user_id}` | **Buscar usuário por ID**: Detalhes de um usuário específico. |
-| `PUT` | `/{user_id}` | **Atualizar usuário**: Modifica os dados do usuário logado. |
-| `DELETE` | `/{user_id}` | **Deletar usuário**: Remove um usuário do sistema. |
+#### No Windows:
+```bash
+python -m pip install --user pipx
+python -m pipx ensurepath
+```
 
-### 🏷️ Marcas (`/brands`)
-| Método | Rota | Nome/Descrição |
-| :--- | :--- | :--- |
-| `POST` | `/` | **Criar nova marca**: Cadastra uma fabricante de veículos. |
-| `GET` | `/` | **Listar marcas**: Retorna as marcas com filtros de busca e status. |
-| `GET` | `/{brand_id}` | **Buscar marca por ID**: Detalhes de uma marca específica. |
-| `PUT` | `/{brand_id}` | **Atualizar marca**: Modifica os dados de uma marca existente. |
-| `DELETE` | `/{brand_id}` | **Deletar marca**: Remove uma marca (se não houver carros associados). |
+Após a instalação, reinicie o terminal ou execute:
+```bash
+source ~/.bashrc  # Linux
+source ~/.zshrc   # macOS com zsh
+```
 
-### 🏎️ Carros (`/cars`)
-| Método | Rota | Nome/Descrição |
-| :--- | :--- | :--- |
-| `POST` | `/` | **Criar novo carro**: Registra um novo veículo no catálogo. |
-| `GET` | `/` | **Listar carros**: Busca avançada de veículos com diversos filtros. |
-| `GET` | `/{car_id}` | **Buscar carro por ID**: Detalhes completos de um veículo. |
-| `PUT` | `/{car_id}` | **Atualizar carro**: Modifica os dados de um veículo (apenas o proprietário). |
-| `DELETE` | `/{car_id}` | **Deletar carro**: Remove um veículo do sistema. |
-| `POST` | `/{car_id}/transfer` | **Transferir carro**: Altera o proprietário de um veículo. |
+### 2. Instalação do Poetry
 
-### ⚙️ Geral
-| Método | Rota | Nome/Descrição |
-| :--- | :--- | :--- |
-| `GET` | `/health_check` | **Health Check**: Verifica a integridade e status da API. |
+Com o pipx instalado, instale o Poetry:
 
----
+```bash
+pipx install poetry
+```
 
-## 🛠️ Como Executar
+Verifique a instalação:
+```bash
+poetry --version
+```
 
-### Pré-requisitos
-- Python 3.13+
-- PostgreSQL
-- Poetry
+### 3. Instalação do Python
 
-### Instalação
-1. Clone o repositório.
-2. Instale as dependências:
-   ```bash
-   poetry install
-   ```
-3. Configure as variáveis de ambiente no arquivo `.env` (use o `.env.example` como base).
-4. Execute as migrações do banco de dados:
-   ```bash
-   poetry run alembic upgrade head
-   ```
+#### No Linux:
 
-### Comandos Úteis (Taskipy)
-O projeto utiliza o `taskipy` para facilitar a execução de comandos comuns:
+O Linux presa muito pela estabilidade, então é possível que mesmo com uma distribuição recente você encontre versões mais antigas rodando no sistema.
 
-- **Rodar a API**: `task run`
-- **Rodar Testes**: `task test`
-- **Formatação de Código**: `task format`
-- **Linting**: `task lint`
-- **Documentação (MkDocs)**: `task docs`
+> Ex: O Pop OS 22.04 LTS usa a versão **3.10.12** por padrão.
 
----
+Por isso, o recomendado é instalar utilizando o `poetry`.
 
-## 📖 Documentação Automática
-Com a API rodando, você pode acessar a documentação interativa em:
-- **Swagger UI**: `http://localhost:8000/docs`
-- **ReDoc**: `http://localhost:8000/redoc`
+```
+poetry python install 3.13
+poetry env use 3.13
+```
+
+Dessa forma, qualquer comando do poetry usará a versão 3.13.
+
+Se quiser alterar a versão do terminal atual, pode rodar o seguinte comando:
+
+```
+$(poetry env activate)
+python3 --version
+```
+
+#### No Windows:
+
+Você pode fazer o download da versão 3.13 ou superior [aqui](https://www.python.org/downloads/windows/).
+
+#### No MacOS:
+
+TBD?
+
+## Configuração do Projeto
+
+### 1. Clone o repositório
+```bash
+git clone https://github.com/higorgustavo/fastapi-car-api.git
+cd car_api
+```
+
+### 2. Instalar dependências
+
+Instale todas as dependências do projeto (incluindo as de desenvolvimento):
+
+```bash
+poetry install
+```
+
+Este comando irá:
+- Criar um ambiente virtual automaticamente
+- Instalar todas as dependências listadas em `pyproject.toml`
+- Instalar as dependências de desenvolvimento (pytest, ruff, taskipy)
+
+### 3. Configurar o banco de dados
+
+Execute as migrações do Alembic para criar as tabelas no banco de dados:
+
+```bash
+mv .env.example .env
+poetry run alembic upgrade head
+```
+
+## Comandos Disponíveis (Taskipy)
+
+O projeto utiliza o Taskipy para automatizar tarefas comuns. Todos os comandos devem ser executados através do Poetry:
+
+### Executar a aplicação
+```bash
+poetry run task run
+```
+Inicia o servidor de desenvolvimento FastAPI na porta padrão.
+
+### Executar testes
+```bash
+poetry run task test
+```
+Este comando irá:
+- Executar o lint automaticamente (pre_test)
+- Rodar todos os testes com pytest
+- Gerar relatório de cobertura HTML (post_test)
+
+### Linting (verificação de código)
+```bash
+poetry run task lint
+```
+Verifica o código usando Ruff para identificar problemas de estilo e qualidade.
+
+### Formatação de código
+```bash
+poetry run task format
+```
+Este comando irá:
+- Executar correções automáticas do lint (pre_format)
+- Formatar o código usando Ruff
+
+## Estrutura do Projeto
+
+```
+car_api/               # Código principal da aplicação
+   app.py              # Arquivo principal do FastAPI
+   core/               # Configurações e funcionalidades centrais
+      database.py      # Configurações do banco de dados
+      security.py      # Funções de segurança e autenticação
+      settings.py      # Configurações da aplicação
+   models/             # Modelos SQLAlchemy
+      base.py          # Modelo base
+      cars.py          # Modelo de carros
+      users.py         # Modelo de usuários
+   routers/            # Rotas da API
+      auth.py          # Rotas de autenticação
+      brands.py        # Rotas de marcas
+      cars.py          # Rotas de carros
+      users.py         # Rotas de usuários
+   schemas/            # Esquemas Pydantic
+      auth.py          # Esquemas de autenticação
+      brands.py        # Esquemas de marcas
+      cars.py          # Esquemas de carros
+      users.py         # Esquemas de usuários
+migrations/            # Migrações do Alembic
+tests/                 # Testes automatizados
+.env                   # Variáveis de ambiente
+alembic.ini            # Configuração do Alembic
+pyproject.toml         # Configuração do projeto e dependências
+README.md              # Este arquivo
+```
+
+## Dependências Principais
+
+- **FastAPI**: Framework web moderno e rápido
+- **SQLAlchemy**: ORM para Python
+- **Alembic**: Ferramenta de migração de banco de dados
+- **Aiosqlite**: Driver SQLite assíncrono
+- **Psycopg**: Driver PostgreSQL assíncrono
+- **Pydantic Settings**: Gerenciamento de configurações
+- **PWDLib**: Biblioteca para hash de senhas
+- **PyJWT**: Biblioteca para tokens JWT
+- **mkdocs**: Biblioteca para a documentação online do projeto
+
+## Dependências de Desenvolvimento
+
+- **Pytest**: Framework de testes
+- **Pytest-asyncio**: Suporte para testes assíncronos
+- **Ruff**: Linter e formatador de código
+- **Taskipy**: Automação de tarefas
+- **Coverage**: Relatórios de cobertura de testes
+
+## Executando Comandos no Ambiente Virtual
+
+Todos os comandos devem ser prefixados com `poetry run` para garantir que sejam executados no ambiente virtual correto:
+
+```bash
+# Executar a aplicação na porta 8000
+poetry run task run
+
+# Executar a documentação na porta 8001
+poetry run task docs
+
+# Executar testes
+poetry run task test
+
+# Verificar código
+poetry run task lint
+
+# Formatar código
+poetry run task format
+
+# Executar comandos do Alembic
+poetry run alembic upgrade head
+poetry run alembic revision --autogenerate -m "descrição da migração"
+
+# Executar pytest diretamente
+poetry run pytest
+
+# Executar outros comandos Python
+poetry run python -c "print('Hello World')"
+```
+
+## Desenvolvimento
+
+1. Faça suas alterações no código
+2. Execute os testes: `poetry run task test`
+3. Verifique o código: `poetry run task lint`
+4. Formate o código: `poetry run task format`
+5. Execute a aplicação: `poetry run task run`
+6. Execute a documentação: `poetry run task docs`
+
+## Relatórios de Cobertura
+
+Após executar os testes com `poetry run task test`, um relatório HTML de cobertura será gerado na pasta `htmlcov/`. Abra o arquivo `htmlcov/index.html` no seu navegador para visualizar o relatório detalhado.
